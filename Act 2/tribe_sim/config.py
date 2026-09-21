@@ -31,7 +31,7 @@ if HIGH_DATA_MODE:
     FARMER_POPULATION = 100
     PREDATOR_COUNT = 50
     FOOD_COUNT = 300
-    
+
     # Display subset (what gets rendered)
     DISPLAY_POPULATION = 10  # Evolving tribe
     DISPLAY_NINJA = 10
@@ -47,7 +47,7 @@ else:
     FARMER_POPULATION = 5
     PREDATOR_COUNT = 5
     FOOD_COUNT = 50
-    
+
     # Display everything in game mode
     DISPLAY_POPULATION = INITIAL_POPULATION
     DISPLAY_NINJA = NINJA_POPULATION
@@ -67,9 +67,9 @@ MUTATION_STRENGTH = 0.2  # ±20% of current value
 if HIGH_DATA_MODE:
     # Tiny entities for high population simulation (background data)
     GATHERER_RADIUS = 5   # Very small for lots of agents
-    PREDATOR_SIZE = 8     # Very small for lots of predators  
+    PREDATOR_SIZE = 8     # Very small for lots of predators
     FOOD_SIZE = 3         # Very small for lots of food
-    
+
     # Display sizes for visual representation (original game sizes)
     DISPLAY_GATHERER_RADIUS = 22  # Half of 45
     DISPLAY_PREDATOR_SIZE = 37    # Half of 75
@@ -79,7 +79,7 @@ else:
     GATHERER_RADIUS = 22  # Half of 45
     PREDATOR_SIZE = 37    # Half of 75
     FOOD_SIZE = 18        # Half of 36
-    
+
     DISPLAY_GATHERER_RADIUS = GATHERER_RADIUS
     DISPLAY_PREDATOR_SIZE = PREDATOR_SIZE
     DISPLAY_FOOD_SIZE = FOOD_SIZE

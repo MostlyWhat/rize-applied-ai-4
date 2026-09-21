@@ -8,24 +8,24 @@ class GeneticAlgorithm:
         self.generation = 1
         self.fitness_history = []
         self.trait_history = []  # Track trait averages over generations
-    
+
     def create_initial_population(self):
         population = []
         for _ in range(INITIAL_POPULATION):
             gatherer = Gatherer()
             population.append(gatherer)
         return population
-    
+
     def evaluate_fitness(self, population):
         fitness_scores = []
         for gatherer in population:
             fitness = gatherer.calculate_fitness()
             fitness_scores.append((gatherer, fitness))
-        
+
         # Sort by fitness (highest first)
         fitness_scores.sort(key=lambda x: x[1], reverse=True)
         return fitness_scores
-    
+
     def select_survivors(self, fitness_scores):
         # STUDENT ASSIGNMENT 3: Implement a better selection mechanism
         # Current version just takes top 50% - very simple!
@@ -50,12 +50,19 @@ class GeneticAlgorithm:
         # - Consider selection pressure: too high = less diversity, too low = slow evolution
         #
         # Remember: Selection determines which traits get passed to next generation!
-        
-        # Minimal version: just take top 50% of population
-        survival_count = max(1, len(fitness_scores) // 2)  # Top 50%
-        survivors = [gatherer for gatherer, fitness in fitness_scores[:survival_count]]
-        return survivors
-    
+
+        # Get top 25%
+        survival_count = max(1, len(fitness_scores) // 4)
+        elites = [elite for elite, fitness in fitness_scores[:survival_count]]
+        randoms = []
+
+        # randomly select the rest with a 50% chance
+        for rando, fitness in fitness_scores[survival_count:]:
+            if random.random() >= 0.5:
+                randoms.append(rando)
+
+        return elites + randoms
+
     def crossover(self, parent1, parent2):
         child_genes = {}
         for gene_name in parent1.genes:
@@ -64,10 +71,10 @@ class GeneticAlgorithm:
                 child_genes[gene_name] = parent1.genes[gene_name]
             else:
                 child_genes[gene_name] = parent2.genes[gene_name]
-        
+
         child = Gatherer(genes=child_genes)
         return child
-    
+
     def mutate(self, gatherer):
         # STUDENT ASSIGNMENT 2: Implement a better mutation strategy
         # Current version just randomly flips genes - very crude!
@@ -87,17 +94,33 @@ class GeneticAlgorithm:
         # 6. Should all genes mutate equally? Maybe cooperation needs special handling?
         #
         # Remember: Mutation provides diversity but shouldn't destroy good solutions!
-        
+
         for gene_name in gatherer.genes:
             if random.random() < MUTATION_RATE:
-                # Minimal version: just flip a coin and randomize the gene completely
+                gene = gatherer.genes[gene_name]
                 min_val, max_val = GENE_RANGES[gene_name]
-                gatherer.genes[gene_name] = random.uniform(min_val, max_val)
-    
+                pos_neg = 1 if random.random() < 0.5 else -1
+
+                match gene_name:
+                    case "speed":
+                        gene *= pos_neg * MUTATION_STRENGTH
+
+                    case "caution":
+                        gene *= pos_neg * MUTATION_STRENGTH * 2
+
+                    case "search_pattern":
+                        gene *= pos_neg * MUTATION_STRENGTH
+
+                    case "efficiency":
+                        gene *= pos_neg * MUTATION_STRENGTH
+
+                    case "cooperation":
+                        gene = 1.0
+
     def create_next_generation(self, population):
         # Evaluate fitness
         fitness_scores = self.evaluate_fitness(population)
-        
+
         # Record statistics
         if fitness_scores:
             best_fitness = fitness_scores[0][1]
@@ -107,7 +130,7 @@ class GeneticAlgorithm:
                 'best_fitness': best_fitness,
                 'avg_fitness': avg_fitness
             })
-            
+
             # Record trait averages
             all_gatherers = [gatherer for gatherer, _ in fitness_scores]
             trait_averages = {
@@ -119,18 +142,18 @@ class GeneticAlgorithm:
                 'avg_cooperation': sum(g.genes['cooperation'] for g in all_gatherers) / len(all_gatherers)
             }
             self.trait_history.append(trait_averages)
-        
+
         # Select survivors
         survivors = self.select_survivors(fitness_scores)
-        
+
         # Create new population
         new_population = []
-        
+
         # Add survivors (reset their state)
         for survivor in survivors:
             new_gatherer = Gatherer(genes=survivor.genes)
             new_population.append(new_gatherer)
-        
+
         # Create offspring to fill remaining slots
         offspring_count = INITIAL_POPULATION - len(survivors)
         for _ in range(offspring_count):
@@ -139,10 +162,10 @@ class GeneticAlgorithm:
             child = self.crossover(parent1, parent2)
             self.mutate(child)
             new_population.append(child)
-        
+
         self.generation += 1
         return new_population
-    
+
     def get_population_stats(self, population):
         if not population:
             return {
@@ -154,11 +177,11 @@ class GeneticAlgorithm:
                 'avg_caution': 0,
                 'avg_cooperation': 0
             }
-        
+
         alive_gatherers = [g for g in population if g.alive]
         alive_count = len(alive_gatherers)
         total_count = len(population)
-        
+
         if alive_gatherers:
             fitness_scores = [g.calculate_fitness() for g in alive_gatherers]
             avg_fitness = sum(fitness_scores) / len(fitness_scores)
@@ -174,7 +197,7 @@ class GeneticAlgorithm:
             avg_speed = sum(g.genes['speed'] for g in population) / len(population)
             avg_caution = sum(g.genes['caution'] for g in population) / len(population)
             avg_cooperation = sum(g.genes['cooperation'] for g in population) / len(population)
-        
+
         return {
             'alive_count': alive_count,
             'total_count': total_count,
@@ -184,7 +207,7 @@ class GeneticAlgorithm:
             'avg_caution': avg_caution,
             'avg_cooperation': avg_cooperation
         }
-    
+
     def reset(self):
         self.generation = 1
         self.fitness_history = []
